@@ -1,5 +1,17 @@
 !=main_obj
+
 :plain
   \n
-- each connected_function in connected_functions
-  !=main_obj_name + '.prototype.' + connected_function + ' = function()'
+
+- each instance_function in connected_instance_functions
+  !=main_obj_name + '.prototype.' + instance_function + ' = function() {'
+  instance
+  };
+
+:plain
+  \n
+
+- each static_function in connected_static_functions
+  !=main_obj_name + '.' + static_function + ' = function(data) {'
+    = post(routes[static_function], 'data')
+  };

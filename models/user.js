@@ -7,8 +7,8 @@ User.prototype.is_valid = function() {
     return this.id > 0 && this.name && this.name.length > 3;
 }
 
-User.prototype.get_by_id = function(id) {
+User.get_by_id = function(id) {
     return new User(id, '' + id);
 }
 
-User.prototype.get_by_id.expose = true;
+User.get_by_id.expose = true;
