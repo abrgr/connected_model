@@ -1,3 +1,5 @@
-main_obj
-:each connected_function in connected_functions
-    =main_obj_name function =connected_function
+!=main_obj
+:plain
+  \n
+- each connected_function in connected_functions
+  !=main_obj_name + '.prototype.' + connected_function + ' = function()'

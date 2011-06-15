@@ -37,7 +37,7 @@ app.get('/', function(req, res){
   });
 });
 
-app.connect_model('/users', User);
+app.connect_model('/users', User, 'User');
 
 app.get('/test', function(req, res) {
     var user = new User(1, 'adam');
