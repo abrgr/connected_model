@@ -40,10 +40,5 @@ app.get('/', function(req, res){
   });
 });
 
-app.get('/test', function(req, res) {
-    var user = new User(1, 'adam');
-    res.send(user.is_valid(), {'content-type': 'text/javascript'});
-});
-
 app.listen(3000);
 console.log("Express server listening on port %d", app.address().port);
