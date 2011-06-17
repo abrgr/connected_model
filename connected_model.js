@@ -1,11 +1,20 @@
 var express = require('express')
     , HTTPSServer = express.HTTPSServer
-    , HTTPServer = express.HTTPServer;
+    , HTTPServer = express.HTTPServer
+    , utils = require('./utils');
 
 module.exports.connectModel 
     = HTTPServer.prototype.connectModel 
     = HTTPSServer.prototype.connectModel = function(baseRoute, model, modelName, options) {
     var app = this;
+
+    if ( arguments.length === 1 && !utils.isString(baseRoute) ) {
+        // we just got an options object
+        options = baseRoute; // options is the first and only param
+        baseRoute = options.baseRoute;
+        model = options.model;
+        modelName = options.modelName;
+    }
 
     if ( !modelName ) {
         modelName = baseRoute.substring(baseRoute.lastIndexOf('/') + 1);
@@ -87,7 +96,7 @@ function getConnectedModelFunctions(model, getInstanceFunctions) {
 
         return Object.keys(model).map(function(modelPropertyName) {
             var modelProperty = model[modelPropertyName];
-            if ( modelProperty instanceof Function && modelProperty.expose ) {
+            if ( modelProperty instanceof Function && modelProperty.ajaxify ) {
                 return modelPropertyName;
             }
         }).filter(function(modelPropertyName) { return !!modelPropertyName; });
@@ -116,31 +125,33 @@ function getParamsFromUrl(url, route) {
 function renderClassDefinition(ctor, name, propertiesToSkip) {
     propertiesToSkip = propertiesToSkip || [];
 
-    return ['var ' + name + ' = ' + string(ctor.prototype.constructor) + ';'].concat( 
+    return ['var ' + name + ' = ' + toSource(ctor.prototype.constructor) + ';'].concat( 
         Object.keys(ctor.prototype).filter(function(key) {
-            return !~propertiesToSkip.indexOf(key);
+            var prop = ctor.prototype[key];
+            return !~propertiesToSkip.indexOf(key) && !('hide_from_client' in prop);
         }).map(function(key){
             var val = ctor.prototype[key];
-            return name + '.prototype["' + key + '"] = ' + string(val) + ';';
+            return name + '.prototype["' + key + '"] = ' + toSource(val) + ';';
         }).concat(
             Object.keys(ctor).filter(function(key) {
-                return !~propertiesToSkip.indexOf(key);
+                var prop = ctor[key];
+                return !~propertiesToSkip.indexOf(key) && !('hide_from_client' in prop);
             }).map(function(key) {
                 var val = ctor[key];
-                return name + '["' + key + '"] = ' + string(val) + ';';
+                return name + '["' + key + '"] = ' + toSource(val) + ';';
             })
         )
     ).join('\n');
 }
 
 /**
-* Return a string representation of `obj`.
+* Return a javascript representation of `obj`.
 *
 * @param {Mixed} obj
 * @return {String}
 * @api private
 */
-function string(obj) {
+function toSource(obj) {
   if ('function' == typeof obj) {
     return obj.toString();
   } else if (obj instanceof Date) {
