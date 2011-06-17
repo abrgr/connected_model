@@ -22,7 +22,8 @@ module.exports.connectModel
         app.get(route + '(/?)*', function(req, res) {
             params = getParamsFromUrl(req.url, route);
 
-            res.send(model[functionName].apply(null, params), {'content-type': 'application/json'});
+            var result = model[functionName].apply(null, params);
+            res.send(result, {'content-type': getContentTypeForValue(result)});
         });
 
         routes[functionName] = route;
@@ -35,7 +36,7 @@ module.exports.connectModel
         app.post(route, function(req, res) {
             params = getParamsFromUrl(req.url, route);
             var targets = null;
-            console.log(req.body.toString());
+            
             if ( req.body instanceof Array ) {
                 targets = req.body;
             } else if ( req.body instanceof Object ) {
@@ -48,7 +49,8 @@ module.exports.connectModel
 
             targets.forEach(function(target) {
                 target.prototype = model.prototype;
-                res.send(model.prototype[functionName].apply(target, params), {'content-type': 'application/json'});
+                var result = model.prototype[functionName].apply(target, params);
+                res.send(result, {'content-type': getContentTypeForValue(result)});
             });
         });
 
@@ -67,6 +69,14 @@ module.exports.connectModel
             }
         );
     });
+}
+
+function getContentTypeForValue(value) {
+    if ( value === null || value === undefined || 'string' === typeof(value) || value instanceof String ) {
+        return 'text/plain';
+    }
+
+    return 'application/json';
 }
 
 function getConnectedModelFunctions(model, getInstanceFunctions) {

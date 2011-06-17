@@ -7,7 +7,5 @@
 |    )
 |  );
 |  urlArgs = urlArgs.join('/');
-|  var promise = $.ajax({url: '#{url}' + urlArgs, data: JSON.stringify(this), processData: false, type: 'POST', contentType: 'application/json'}).pipe(function() { /*success*/ return $.Deferred().resolveWith(this, #{main_obj_name}.fromJSON.apply(null, arguments)); });
-|  promise.success = promise.done;
-|  promise.fail = promise.error;
-|  return promise;
+|  var promise = new $.Deferred();
+|  return $.ajax({url: '#{url}' + urlArgs, data: JSON.stringify(this), processData: false, type: 'POST', contentType: 'application/json'});

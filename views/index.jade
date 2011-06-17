@@ -6,11 +6,14 @@ script
   $(document).ready(function() {
   var user = new User(1, 'adam');
   alert(user.is_valid());
-  User.get_by_id(1).success(
+  User.get_by_id(1).then(
     function(d) { 
-      alert('success: ' + $.param(d)); 
+      alert('success: ' + d.name); 
+      d.save().then(function(a) {
+        alert('good: ' + a);
+      }).fail(function(f) { alert('bad: ' + f);});
     }
-  ).error(
+  ).fail(
     function(d) { 
       alert('fail: ' + $.param(d)); 
     }
