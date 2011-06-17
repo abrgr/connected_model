@@ -37,7 +37,7 @@ module.exports.connectModel
         // add post routes for instance functions that expect model(s) posted to them
         var route = baseRoute + '/' + functionName;
         app.post(route, function(req, res) {
-            params = getParamsFromUrl(req.url);
+            params = getParamsFromUrl(req.url, route);
             var targets = null;
             if ( req.body instanceof Array ) {
                 targets = req.body;
@@ -152,8 +152,8 @@ function string(obj) {
 }
 
 function getClientSidePost() {
-    return function(url, dataVariableName) {
-        return 'return $.post(\'' + url + '\', ' + dataVariableName + ');'; 
+    return function(url) {
+        return '\nvar urlArgs = [""].concat(\nArray.prototype.map.call(\nArray.prototype.slice.call(arguments, 1), \nfunction(arg){\nreturn encodeURI(arg);}));\nurlArgs=urlArgs.join("/");\nreturn $.post(\'' + url + '\' + urlArgs, this);'; 
     }
 }
 

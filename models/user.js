@@ -7,6 +7,12 @@ User.prototype.is_valid = function() {
     return this.id > 0 && this.name && this.name.length > 3;
 }
 
+User.prototype.save = function() {
+    return 'save done';
+}
+
+User.prototype.save.expose=true;
+
 User.get_by_id = function(id) {
     return new User(id, '' + id);
 }
