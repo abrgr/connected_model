@@ -1,0 +1,15 @@
+|  var urlArgs = [''].concat(
+|    Array.prototype.map.call(
+|      arguments,
+|      function(arg) {
+|        return encodeURI(arg);
+|      }
+|    )
+|  );
+|  urlArgs = urlArgs.join('/');
+| 
+|  var ajaxPromise = $.ajax({url: '#{url}' + urlArgs, type: 'GET'});
+|  var promise = ajaxPromise.pipe(function() { /*success*/ return #{main_obj_name}.fromJSON.apply(null, arguments); });
+|  promise.success = promise.done;
+|  promise.error = promise.fail;
+|  return promise;

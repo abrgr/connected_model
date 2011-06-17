@@ -13,10 +13,6 @@ module.exports.connectModel
 
     options = options || {};
 
-    // our template is haml
-    // TODO: should we namespace this so we don't effect the actual creator of app?
-    app.register('.haml', require('hamljs'));
-
     var routes = {};
 
     var connectedModelStaticFunctions = getConnectedModelFunctions(model, false);
@@ -39,13 +35,14 @@ module.exports.connectModel
         app.post(route, function(req, res) {
             params = getParamsFromUrl(req.url, route);
             var targets = null;
+            console.log(req.body.toString());
             if ( req.body instanceof Array ) {
                 targets = req.body;
             } else if ( req.body instanceof Object ) {
                 targets = [req.body];
             }
 
-            if ( !!targets ) {
+            if ( !targets ) {
                 throw Error('Invalid post body');
             }
 
@@ -59,12 +56,10 @@ module.exports.connectModel
     });
 
     app.get(baseRoute + '/model.js', function(req, res) {
-        res.render('connected_model.haml', 
+        res.render('connected_model.jade', 
 			{
              layout: false, 
              routes: routes,
-             post: getClientSidePost(),	
-             get: getClientSideGet(),	
              connected_instance_functions: connectedModelInstanceFunctions, 
              connected_static_functions: connectedModelStaticFunctions, 
              main_obj: renderClassDefinition(model, modelName, connectedModelInstanceFunctions.concat(connectedModelStaticFunctions)), 
@@ -149,16 +144,4 @@ function string(obj) {
   } else {
     return JSON.stringify(obj);
   }
-}
-
-function getClientSidePost() {
-    return function(url) {
-        return '\nvar urlArgs = [""].concat(\nArray.prototype.map.call(\nArray.prototype.slice.call(arguments, 1), \nfunction(arg){\nreturn encodeURI(arg);}));\nurlArgs=urlArgs.join("/");\nreturn $.post(\'' + url + '\' + urlArgs, this);'; 
-    }
-}
-
-function getClientSideGet() {
-    return function(url) {
-        return '\nvar urlArgs = [""].concat(Array.prototype.map.call(arguments, \nfunction(arg){\nreturn encodeURI(arg);}));\nurlArgs=urlArgs.join("/");\n\nreturn $.get("' + url + '" + urlArgs);'; 
-    }
 }

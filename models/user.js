@@ -8,7 +8,7 @@ User.prototype.is_valid = function() {
 }
 
 User.prototype.save = function() {
-    return 'save done';
+    return 'save done for: ' + this.name;
 }
 
 User.prototype.save.expose=true;
@@ -18,3 +18,7 @@ User.get_by_id = function(id) {
 }
 
 User.get_by_id.expose = true;
+
+User.fromJSON = function(json) {
+    return new User(json.id, json.name);
+}
