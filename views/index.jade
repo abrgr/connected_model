@@ -1,4 +1,4 @@
-script(type='text/javascript', src='http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.js')
+script(type='text/javascript', src='/scripts/jquery.js')
 script(type='text/javascript', src='/users/model.js')
 h1= title
 p= 'Welcome to ' + title
@@ -10,8 +10,9 @@ script
     function(d) { 
       alert('success: ' + d.name); 
       console.log(d.save);
+      d.name = 'update this2';
       d.save().then(function(a) {
-        alert('good: ' + a);
+        alert('good: ' + a.id);
       }).fail(function(f) { alert('bad: ' + f);});
     }
   ).fail(

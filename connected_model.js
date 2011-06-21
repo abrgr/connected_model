@@ -2,7 +2,8 @@ var express = require('express')
     , HTTPSServer = express.HTTPSServer
     , HTTPServer = express.HTTPServer
     , utils = require('./utils')
-    , _ = require('underscore');
+    , _ = require('underscore')
+    , Deferred = require('./deferred');
 
 module.exports.connectModel 
     = HTTPServer.prototype.connectModel 
@@ -29,7 +30,7 @@ module.exports.connectModel
     connectedModelStaticFunctions.forEach(function(functionName) {
         // add get routes for static functions
         var route = baseRoute + '/' + functionName;
-        app.get(route + '(/?)*', function(req, res) {
+        app.get(route + '(/?)*', function(req, res, next) {
             params = getParamsFromUrl(req.url, route);
 
             var promise = model[functionName].apply(null, params);
@@ -38,8 +39,7 @@ module.exports.connectModel
                 promise.success(function(result) {
                     res.send(result, {'content-type': getContentTypeForValue(result)});
                 }).fail(function(result) {
-                    res.statusCode = 500;
-                    res.end('Failed to execute ' + functionName);
+                    next(result);
                 });
             } else {
                 // we'll try to send whatever we got back
@@ -54,12 +54,12 @@ module.exports.connectModel
     connectedModelInstanceFunctions.forEach(function(functionName) { 
         // add post routes for instance functions that expect model(s) posted to them
         var route = baseRoute + '/' + functionName;
-        app.post(route, function(req, res) {
+        app.post(route, function(req, res, next) {
             params = getParamsFromUrl(req.url, route);
             var targets = null;
             var returnArray;
 
-            if ( req.body instanceof Array ) {
+            if ( _.isArray(req.body) ) {
                 targets = req.body;
                 returnArray = true;
             } else if ( req.body instanceof Object ) {
@@ -68,13 +68,31 @@ module.exports.connectModel
             }
 
             if ( !targets ) {
-                throw Error('Invalid post body');
+                throw new Error('Invalid post body for: ' + functionName);
             }
 
-            targets.forEach(function(target) {
-                target.prototype = model.prototype;
-                var result = model.prototype[functionName].apply(target, params);
+            Deferred.afterAll(targets.map(function(target) { 
+                target = utils.classify(target, model);
+                var promise = model.prototype[functionName].apply(target, params);
+                if ( _.isFunction(promise.success) && _.isFunction(promise.fail) ) {
+                    // model returned a promise as it should
+                    return promise;
+                } else {
+                    // we'll try to send whatever we got back
+                    return new Deferred(promise).promise();
+                }
+            })).success(function(result) {
+                // result is an array of results from the above invocations, where each result is an array of args to success
+                // we expect a single result for each invocation so we unzip the inner arrays
+                result = result.map(function(res) { return res[0]; });
+                if ( !returnArray ) {
+                    // we converted the target into an array.  now just return our single result
+                    result = result[0];
+                }
+                
                 res.send(result, {'content-type': getContentTypeForValue(result)});
+            }).fail(function(err) {
+                next(err);
             });
         });
 
@@ -96,7 +114,7 @@ module.exports.connectModel
 }
 
 function getContentTypeForValue(value) {
-    if ( value === null || value === undefined || 'string' === typeof(value) || value instanceof String ) {
+    if ( value === null || value === undefined || _.isString(value) ) {
         return 'text/plain';
     }
 

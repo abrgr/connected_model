@@ -7,6 +7,10 @@ var Deferred = module.exports = function() {
     this._failureCbs = [];
     this._args = [];
     this._success = undefined; // undefined - not done yet, true = success, false = failure
+
+    if ( arguments.length > 0 ) {
+        this.resolve.apply(this, arguments);
+    }
 };
 
 Deferred.prototype.resolve = function() {
@@ -68,4 +72,38 @@ Deferred.prototype.promise = function() {
         success: function(cb) { return self.success(cb); },
         fail: function(cb) { return self.fail(cb); }
     };
+};
+
+Deferred.afterAll = function(promises) {
+    if ( !_.isArray(promises) ) {
+        throw new Error('afterAll requires an array of promises');
+    }
+
+    var args = [];
+
+    var deferred = new Deferred();
+    promises.forEach(function(promise) {
+        promise.success(function() {
+            args.push(arguments);
+            if ( args.length === promises.length ) {
+                deferred.resolve(args);
+            }
+        }).fail(function() {
+            deferred.reject.apply(deferred, arguments);
+        });
+    });
+
+    return deferred.promise();
+};
+
+Deferred.resolved = function() {
+    var deferred = new Deferred();
+    deferred.resolve.apply(deferred, arguments);
+    return deferred;
+};
+
+Deferred.rejected = function() {
+    var deferred = new Deferred();
+    deferred.reject.apply(deferred, arguments);
+    return deferred;
 };

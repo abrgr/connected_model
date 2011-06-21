@@ -2,10 +2,13 @@
 
 - each instance_function in connected_instance_functions
   != main_obj_name + '.prototype.' + instance_function + ' = function() {'
-    != partial('post_jquery', {url: routes[instance_function]})
-|    };
+  != partial('post_jquery', {url: routes[instance_function]})
+  |    };
+  != main_obj_name + '.' + instance_function + ' = function(arrayOfModels) {'
+  != partial('post_jquery', {url: routes[instance_function]})
+  |    };
 | 
 - each static_function in connected_static_functions
   != main_obj_name + '.' + static_function + ' = function() {'
-    != partial('get_jquery', {url: routes[static_function]})
-|    };
+  != partial('get_jquery', {url: routes[static_function]})
+  |    };

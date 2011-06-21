@@ -12,20 +12,3 @@ User.prototype.secureFn = function() {
 }
 
 User.prototype.secureFn.hide_from_client = true;
-
-User.prototype.save = function() {
-    return 'save done for: ' + this.name;
-}
-
-User.prototype.save.ajaxify=true;
-
-/*User.get_by_id = function(id) {
-    return new User(id, '' + id);
-}
-
-User.get_by_id.ajaxify = true;
-*/
-
-User.fromJSON = function(json) {
-    return new User(json.id, json.name);
-}
