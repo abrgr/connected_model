@@ -8,12 +8,23 @@
 |  );
 |  urlArgs = urlArgs.join('/');
 |  var promise = new $.Deferred();
-|  var ajaxPromise = $.ajax({url: '#{url}' + urlArgs, type: 'GET'})
+|  var modelize = function(obj) { 
+|    var modelObjConstructor = function(){}; 
+|    modelObjConstructor.prototype = #{main_obj_name}.prototype; 
+|    var modelObj = new modelObjConstructor();
+|    for ( var key in obj ) { 
+|       if ( obj.hasOwnProperty(key) ) {
+|           modelObj[key] = obj[key]; 
+|       }
+|    } 
+|    return modelObj; 
+|  };
+|  $.ajax({url: '#{url}' + urlArgs, type: 'GET'})
 |  .done(function(data) { 
 |      if ( $.isArray(data) ) { promise.resolveWith(null, [data.map(function(datum){return #{main_obj_name}.fromJSON(datum);})]); } 
 |      else if ( /*isString*/data.length && data.substring ) { promise.resolveWith(null, [data]); }
-|      else if ( 'object' === typeof(data) ) { promise.resolveWith(null, [#{main_obj_name}.fromJSON(data)]); }
-|      else { promise.resolveWith(null, [data]); }
+|      else if ( 'object' === typeof(data) ) { console.log('obj'); promise.resolveWith(null, [modelize(data)]); }
+|      else { console.log('?'); promise.resolveWith(null, [data]); }
 |    }
 |  )
 |  .fail(function() { promise.rejectWith(arguments); });

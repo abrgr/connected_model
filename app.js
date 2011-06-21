@@ -4,9 +4,11 @@
  */
 
 var express = require('express');
-var expose = require('express-expose');
 var User = require('./models/user');
 var connected_model = require('./connected_model');
+var MySqlModel = require('./mysql_model');
+var generic_pool = require('generic-pool');
+var mysql = require('db-mysql');
 
 var app = module.exports = express.createServer();
 
@@ -30,6 +32,31 @@ app.configure('production', function(){
 });
 
 // Models
+var pool = generic_pool.Pool({
+    name: 'mysql',
+    max: 10,
+    create: function(callback) {
+        new mysql.Database({
+            hostname: 'localhost',
+            user: 'root',
+            password: 'dudeman',
+            database: 'test'}).connect(function(err, server) {
+                callback(err, this);
+            });
+    },
+    destroy: function(db) {
+        db.disconnect();
+    }
+});
+
+User = new MySqlModel(User, pool,
+{
+    table: 'user',
+    fields: { 
+        id: {field: 'id', id: true},
+        name: {field: 'name'}
+    }
+});
 app.connectModel('/users', User, 'User');
 
 // Routes

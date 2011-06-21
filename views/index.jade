@@ -9,6 +9,7 @@ script
   User.get_by_id(1).then(
     function(d) { 
       alert('success: ' + d.name); 
+      console.log(d.save);
       d.save().then(function(a) {
         alert('good: ' + a);
       }).fail(function(f) { alert('bad: ' + f);});

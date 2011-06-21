@@ -1,5 +1,14 @@
 var utils = module.exports = {};
 
-utils.isString = function(s) { return 'string' === typeof(s) || s instanceof String; };
+utils.classify = function(obj, Type) {
+    var ctor = function(){};
+    ctor.prototype = Type.prototype;
+    var classifiedObj = new ctor();
+    for ( var key in obj ) {
+        if ( obj.hasOwnProperty(key) ) {
+            classifiedObj[key] = obj[key];
+        }
+    }
 
-utils.isArray = function(obj) { return Object.prototype.toString.call(obj) === "[object Array]"; }
+    return classifiedObj;
+}

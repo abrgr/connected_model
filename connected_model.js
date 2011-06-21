@@ -1,14 +1,15 @@
 var express = require('express')
     , HTTPSServer = express.HTTPSServer
     , HTTPServer = express.HTTPServer
-    , utils = require('./utils');
+    , utils = require('./utils')
+    , _ = require('underscore');
 
 module.exports.connectModel 
     = HTTPServer.prototype.connectModel 
     = HTTPSServer.prototype.connectModel = function(baseRoute, model, modelName, options) {
     var app = this;
 
-    if ( arguments.length === 1 && !utils.isString(baseRoute) ) {
+    if ( arguments.length === 1 && !_.isString(baseRoute) ) {
         // we just got an options object
         options = baseRoute; // options is the first and only param
         baseRoute = options.baseRoute;
@@ -31,8 +32,19 @@ module.exports.connectModel
         app.get(route + '(/?)*', function(req, res) {
             params = getParamsFromUrl(req.url, route);
 
-            var result = model[functionName].apply(null, params);
-            res.send(result, {'content-type': getContentTypeForValue(result)});
+            var promise = model[functionName].apply(null, params);
+            if ( _.isFunction(promise.success) && _.isFunction(promise.fail) ) {
+                // model returned a promise as it should
+                promise.success(function(result) {
+                    res.send(result, {'content-type': getContentTypeForValue(result)});
+                }).fail(function(result) {
+                    res.statusCode = 500;
+                    res.end('Failed to execute ' + functionName);
+                });
+            } else {
+                // we'll try to send whatever we got back
+                res.send(result, {'content-type': getContentTypeForValue(result)});
+            }
         });
 
         routes[functionName] = route;
@@ -45,11 +57,14 @@ module.exports.connectModel
         app.post(route, function(req, res) {
             params = getParamsFromUrl(req.url, route);
             var targets = null;
-            
+            var returnArray;
+
             if ( req.body instanceof Array ) {
                 targets = req.body;
+                returnArray = true;
             } else if ( req.body instanceof Object ) {
                 targets = [req.body];
+                returnArray = false;
             }
 
             if ( !targets ) {
@@ -156,7 +171,7 @@ function toSource(obj) {
     return obj.toString();
   } else if (obj instanceof Date) {
     return 'new Date("' + obj + '")';
-  } else if (Array.isArray(obj)) {
+  } else if (_.isArray(obj)) {
     return '[' + obj.map(string).join(', ') + ']';
   } else if ('[object Object]' == Object.prototype.toString.call(obj)) {
     return '{' + Object.keys(obj).map(function(key){
