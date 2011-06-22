@@ -5,8 +5,8 @@
 
 var express = require('express');
 var User = require('./models/user');
-var connected_model = require('./connected_model');
-var MySqlModel = require('./mysql_model');
+var connected_model = require('./connected-model');
+var MySqlModel = require('./mysql-model');
 var generic_pool = require('generic-pool');
 var mysql = require('db-mysql');
 
