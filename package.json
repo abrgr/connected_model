@@ -1,9 +1,12 @@
 {
-    "name": "application-name"
+    "name": "connected-model"
   , "version": "0.0.1"
   , "private": true
   , "dependencies": {
       "express": "2.3.11"
     , "jade": ">= 0.0.1"
+    , "db-mysql": "0.6.7"
+    , "generic-pool": "1.0.6"
+    , "underscore": "1.1.6"
   }
 }

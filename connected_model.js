@@ -1,9 +1,9 @@
-var express = require('express')
-    , HTTPSServer = express.HTTPSServer
-    , HTTPServer = express.HTTPServer
-    , utils = require('./utils')
-    , _ = require('underscore')
-    , Deferred = require('./deferred');
+var express = require('express'),
+    HTTPSServer = express.HTTPSServer,
+    HTTPServer = express.HTTPServer,
+    utils = require('./utils'),
+    _ = require('underscore'),
+    Deferred = require('./deferred');
 
 module.exports.connectModel 
     = HTTPServer.prototype.connectModel 
@@ -111,17 +111,17 @@ module.exports.connectModel
             }
         );
     });
-}
+};
 
-function getContentTypeForValue(value) {
+var getContentTypeForValue = function(value) {
     if ( value === null || value === undefined || _.isString(value) ) {
         return 'text/plain';
     }
 
     return 'application/json';
-}
+};
 
-function getConnectedModelFunctions(model, getInstanceFunctions) {
+var getConnectedModelFunctions = function(model, getInstanceFunctions) {
     // figure out which methods we should expose to the front end
     if ( model instanceof Function ) {
         // model is a constructor
@@ -136,15 +136,15 @@ function getConnectedModelFunctions(model, getInstanceFunctions) {
     }
 
     throw Error('connected_model only handles functions as models');
-}
+};
 
-function getParamsFromUrl(url, route) {
+var getParamsFromUrl = function(url, route) {
     var paramsStr = url.substring(route.length);
     if ( paramsStr[0] === '/' ) {
         paramsStr = paramsStr.substring(1);
     }
     return paramsStr.split('/') || [];
-}
+};
 
 /**
 * Render `ctor` with the given `name`, skipping any properties in `propertiesToSkip`.
@@ -155,27 +155,27 @@ function getParamsFromUrl(url, route) {
 * @return {String}
 * @api private
 */
-function renderClassDefinition(ctor, name, propertiesToSkip) {
+var renderClassDefinition = function(ctor, name, propertiesToSkip) {
     propertiesToSkip = propertiesToSkip || [];
 
     return ['var ' + name + ' = ' + toSource(ctor.prototype.constructor) + ';'].concat( 
         Object.keys(ctor.prototype).filter(function(key) {
             var prop = ctor.prototype[key];
-            return !~propertiesToSkip.indexOf(key) && !('hide_from_client' in prop);
+            return !~propertiesToSkip.indexOf(key) && !prop.hasOwnProperty('hide_from_client');
         }).map(function(key){
             var val = ctor.prototype[key];
             return name + '.prototype["' + key + '"] = ' + toSource(val) + ';';
         }).concat(
             Object.keys(ctor).filter(function(key) {
                 var prop = ctor[key];
-                return !~propertiesToSkip.indexOf(key) && !('hide_from_client' in prop);
+                return !~propertiesToSkip.indexOf(key) && !prop.hasOwnProperty('hide_from_client');
             }).map(function(key) {
                 var val = ctor[key];
                 return name + '["' + key + '"] = ' + toSource(val) + ';';
             })
         )
     ).join('\n');
-}
+};
 
 /**
 * Return a javascript representation of `obj`.
@@ -184,18 +184,18 @@ function renderClassDefinition(ctor, name, propertiesToSkip) {
 * @return {String}
 * @api private
 */
-function toSource(obj) {
-  if ('function' == typeof obj) {
+var toSource = function(obj) {
+  if (_.isFunction(obj)) {
     return obj.toString();
-  } else if (obj instanceof Date) {
+  } else if (_.isDate(obj)) {
     return 'new Date("' + obj + '")';
   } else if (_.isArray(obj)) {
     return '[' + obj.map(string).join(', ') + ']';
-  } else if ('[object Object]' == Object.prototype.toString.call(obj)) {
+  } else if ('[object Object]' === Object.prototype.toString.call(obj)) {
     return '{' + Object.keys(obj).map(function(key){
       return '"' + key + '":' + string(obj[key]);
     }).join(', ') + '}';
   } else {
     return JSON.stringify(obj);
   }
-}
+};

@@ -98,7 +98,7 @@ var MySqlModel = module.exports = function(model, pool, options) {
                 deferred.resolve(utils.classify(rows[0], model));
             });
         });
-    }
+    };
     
     model.get_by_id.ajaxify = true;
 
@@ -184,4 +184,4 @@ var MySqlModel = module.exports = function(model, pool, options) {
     model.prototype.update.ajaxify = true;
 
     return model;
-}
+};

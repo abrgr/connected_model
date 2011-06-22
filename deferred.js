@@ -46,7 +46,7 @@ Deferred.prototype.success = function(cb) {
         this._successCbs.push(cb);
     } else if ( this._success === true ) {
         // already firing or fired
-        while ( this._firing ) { /* wait for firing to end */ }
+        //TODO: we may be mid-firing so this may be out of order
         cb.apply(this, this._args);
     }
 
@@ -58,7 +58,7 @@ Deferred.prototype.fail = function(cb) {
         this._failureCbs.push(cb);
     } else if ( this._success === false ) {
         // already firing or fired
-        while ( this._firing ) { /* wait for firing to end */ }
+        //TODO: we may be mid-firing so this may be out of order
         cb.apply(this, this._args);
     }
 
