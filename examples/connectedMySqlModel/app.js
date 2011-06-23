@@ -5,25 +5,15 @@
 
 var express = require('express');
 var User = require('./models/user');
-var connected_model = require('./connected-model');
-var MySqlModel = require('./mysql-model');
+var connected_model = require('../../index');
 var generic_pool = require('generic-pool');
 var mysql = require('db-mysql');
 
+var MySqlModel = connected_model.MySqlModel;
+
 var app = module.exports = express.createServer();
 
-// Configuration
 
-app.configure(function(){
-  app.set('views', __dirname + '/views');
-  app.set('view engine', 'jade');
-  app.use(express.profiler());
-  app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(app.router);
-  app.use(express.static(__dirname + '/public'));
-  app.use(express.errorHandler({dumpExceptions: true}));
-});
 
 app.configure('development', function(){
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
@@ -59,7 +49,20 @@ User = new MySqlModel(User, pool,
         name: {field: 'name'}
     }
 });
-app.connectModel('/users', User, 'User');
+
+// Configuration
+
+app.configure(function(){
+  app.set('views', __dirname + '/views');
+  app.set('view engine', 'jade');
+  app.use(express.profiler());
+  app.use(express.bodyParser());
+  app.use(express.methodOverride());
+  app.use(connected_model.connectedModel('/users', User, 'User'));
+  app.use(app.router);
+  app.use(express.static(__dirname + '/public'));
+  app.use(express.errorHandler({dumpExceptions: true}));
+});
 
 // Routes
 app.get('/', function(req, res){

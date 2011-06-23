@@ -9,4 +9,5 @@
     , "generic-pool": "1.0.6"
     , "underscore": "1.1.6"
   }
+  , "main": "index"
 }
