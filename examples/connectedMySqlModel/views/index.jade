@@ -13,6 +13,9 @@ script
       d.name = 'update this2';
       d.save().then(function(a) {
         alert('good: ' + a.id);
+        User.match({id: 2}).then(function(matches) {
+            alert('nice! ' + matches.map(function(m) { return m.name; }).join(', '));
+        }).fail(function(f) { alert('bad: ' + f); });
       }).fail(function(f) { alert('bad: ' + f);});
     }
   ).fail(
