@@ -1,7 +1,5 @@
 |  var urlArgs = [''].concat(
-|    Array.prototype.map.call(
-|      arguments,
-|      function(arg) {
+|    $.map(arguments, function(arg) {
 |        return encodeURI(arg);
 |      }
 |    )
@@ -21,10 +19,10 @@
 |  };
 |  $.ajax({url: '#{url}' + urlArgs, type: 'GET'})
 |  .done(function(data) { 
-|      if ( $.isArray(data) ) { promise.resolveWith(null, [data.map(function(datum){return #{main_obj_name}.fromJSON(datum);})]); } 
+|      if ( $.isArray(data) ) { promise.resolveWith(null, [$.map(data, function(datum){return modelize(datum);})]); } 
 |      else if ( /*isString*/data.length && data.substring ) { promise.resolveWith(null, [data]); }
-|      else if ( 'object' === typeof(data) ) { console.log('obj'); promise.resolveWith(null, [modelize(data)]); }
-|      else { console.log('?'); promise.resolveWith(null, [data]); }
+|      else if ( 'object' === typeof(data) ) { promise.resolveWith(null, [modelize(data)]); }
+|      else { promise.resolveWith(null, [data]); }
 |    }
 |  )
 |  .fail(function() { promise.rejectWith(arguments); });

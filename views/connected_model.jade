@@ -1,3 +1,4 @@
+|define(['#{jqueryInclude}'], function($) {
 != main_obj
 
 - each instance_function in connected_instance_functions
@@ -12,3 +13,6 @@
   != main_obj_name + '.' + static_function + ' = function() {'
   != partial('get_jquery', {url: routes[static_function]})
   |    };
+
+|return #{main_obj_name};
+|});

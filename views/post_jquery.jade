@@ -1,11 +1,8 @@
 |  var urlArgs = [''].concat(
-|    Array.prototype.map.call(
-|      arguments,
-|      function(arg) {
+|    $.map(arguments, function(arg) {
 |        return encodeURI(arg);
 |      }
 |    )
 |  );
 |  urlArgs = urlArgs.join('/');
-|  var promise = new $.Deferred();
 |  return $.ajax({url: '#{url}' + urlArgs, data: JSON.stringify(this), processData: false, type: 'POST', contentType: 'application/json'});
