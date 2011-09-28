@@ -76,6 +76,94 @@ module.exports.testSimpleMatchSingle = function(test) {
     }).fail(failTest.bind(null, test));
 };
 
+module.exports.testSimpleInsert = function(test) {
+    var testMain = function() {
+        this.id = undefined;
+        this.val = undefined;
+    };
+
+    var main = new testMain();
+    main.id = 34;
+    main.val = 9848;
+
+    var mockQuery = new MonadTester('select', 'from', 'where', 'insert', 'update', 'set');
+    
+    mockQuery.insert('main', ['main.val'], [main.val]).EXPECT('execute').andCall(0).with(null, {warnings: undefined, id: main.id});
+
+    var MockMain = new MySqlModel(testMain, newPool(mockQuery), {
+        table: 'main',
+        fields: {
+            id: {id: true, field: 'id'},
+            val: {field: 'val'}
+        }
+    });
+
+    var mock = new MockMain();
+    mock.val = main.val;
+
+    mock.insert().success(function(result) {
+        test.equal(main.id, result.id);
+        test.done();
+    }).fail(failTest.bind(null, test));
+};
+
 module.exports.testSaveAssociations = function(test) {
-    test.done();
+    var testAssoc = function() {
+        this.testKey = undefined;
+        this.testVal = undefined;
+    };
+
+    var testMain = function() {
+        this.id = undefined;
+        this.val = undefined;
+        this.others = [];
+    };
+
+    var assoc = new testAssoc();
+    assoc.testVal = 'test this';
+    var ASSOC_ID = 375;
+
+    var main = new testMain();
+    main.id = 34;
+    main.val = 9848;
+    main.others = [assoc];
+
+    var assocInsertDone = false;
+    var linkingInsertDone = false;
+
+    var mockQuery = new MonadTester('select', 'from', 'where', 'insert', 'update', 'set');
+    
+    mockQuery.select(['main.id', 'main.val']).from('main').where('id=?', [main.id]).EXPECT('execute').andCall(0).with(null, [main]);
+    mockQuery.select(['assoc_id']).from('main_assoc').where('main_id=?', [main.id])
+             .EXPECT('execute').andCall(0).with(null, []);
+    mockQuery.select(['assoc.testKey', 'assoc.testVal']).from('assoc').where('assoc.testKey=?', [assoc.testKey])
+             .EXPECT('execute').andCall(0).with(null, []);
+    mockQuery.insert('assoc', ['assoc.testVal'], ['test this']).EXPECT('execute').andCall(function() {
+        assocInsertDone = true;
+    }, 0).with(null, {warnings: null, id: ASSOC_ID});
+
+    var MockAssoc = new MySqlModel(testAssoc, newPool(mockQuery), {
+        table: 'assoc',
+        fields: {
+            testKey: {id: true, field: 'testKey'},
+            testVal: {field: 'testVal'}
+        }
+    });
+
+    var MockMain = new MySqlModel(testMain, newPool(mockQuery), {
+        table: 'main',
+        fields: {
+            id: {id: true, field: 'id'},
+            val: {field: 'val'}
+        },
+        manyToManies: {others: {joinTable: 'main_assoc',
+                                thisFields: {id: 'main_id'},
+                                thatModel: MockAssoc,
+                                thatFields: {testKey: 'assoc_id'}}}
+    });
+
+    main.saveAssociations().success(function(result) { 
+        test.ok(assocInsertDone);
+        test.done();
+    }).fail(failTest.bind(null, test));
 };

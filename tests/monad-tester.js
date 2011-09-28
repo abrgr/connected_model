@@ -1,6 +1,7 @@
 var _ = require('underscore');
 
 function binder(methodName) {
+//    console.log(methodName, Array.prototype.slice.call(arguments, 1));
     this.currentArgs[methodName] = Array.prototype.slice.call(arguments, 1);
 
     return this;
@@ -56,11 +57,16 @@ MonadTester.prototype.EXPECT = function(retMethod) {
             }
 
             selected = selected[0];
-
             self.currentArgs = {};
+
             if ( !!selected.useCb ) {
-                // callback
-                return arguments[selected.cbIdx].apply(undefined, selected.cbArgs);
+                // test provided callback
+                selected.cb.apply(undefined);
+            } 
+            
+            if ( !!selected.useCbIdx ) {
+                // client provided callback
+                arguments[selected.cbIdx].apply(undefined, selected.cbArgs);
             }
 
             return selected.ret;
@@ -74,10 +80,29 @@ MonadTester.prototype.EXPECT = function(retMethod) {
 
             return self;
         },
-        andCall: function(cbIdx) {
+        andCall: function(cb, cbIdx) {
+            if ( _.isNumber(cb) ) {
+                cbIdx = cb;
+                cb = undefined;
+            } else if ( !_.isNumber(cbIdx) || _.isUndefined(cbIdx) ) {
+                throw new Error("andCall expects a numeric index");
+            }
+
             return {
                 with: function() {
-                    self.retMethodsByArgs.push({args: self.currentArgs, cbArgs: Array.prototype.slice.call(arguments), cbIdx: cbIdx, useCb: true});
+                    var state = {args: self.currentArgs };
+                    if ( !!cb ) {
+                        state.cb = cb;
+                        state.useCb = true;
+                    } 
+                    if ( !_.isUndefined(cbIdx) ) {
+                        state.cbIdx = cbIdx;
+                        state.useCbIdx = true;
+                        state.cbArgs = Array.prototype.slice.call(arguments);
+                    }
+
+                    self.retMethodsByArgs.push(state);
+
                     self.currentArgs = {};
 
                     return self;
