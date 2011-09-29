@@ -5,7 +5,9 @@ var MonadTester = require('./monad-tester');
 
 function failTest(test, err) {
     console.error(err);
-    console.error(err.message, err.stack);
+    if ( err instanceof Error ) {
+        console.error(err.message, err.stack);
+    }
     test.ok(false);
     test.done();
 }
@@ -32,9 +34,13 @@ module.exports.testSimpleMatch = function(test) {
 
     var expectedRows = [{testKey: 'key', testVal: 1234}, {testKey: 'key', testVal: 743.4}];
 
-    var mockQuery = new MonadTester('select', 'from', 'where').select(['testTable.testKey', 'testTable.testVal']).from('testTable')
+    var mockQuery = new MonadTester('select', 'from', 'where').select([{testTable_testKey: 'testTable.testKey'}, {testTable_testVal: 'testTable.testVal'}])
+                                                              .from('testTable')
                                                               .where('testTable.testKey=?', ['key'])
-                                                              .EXPECT('execute').andCall(0).with(null, expectedRows);
+                                                              .EXPECT('execute').andCall(0).with(null, [{testTable_testKey: expectedRows[0].testKey,
+                                                                                                         testTable_testVal: expectedRows[0].testVal},
+                                                                                                        {testTable_testKey: expectedRows[1].testKey,
+                                                                                                         testTable_testVal: expectedRows[1].testVal}]);
 
     var Mock = new MySqlModel(testCtor, newPool(mockQuery), {
         table: 'testTable',
@@ -58,9 +64,11 @@ module.exports.testSimpleMatchSingle = function(test) {
 
     var expected = {testKey: 'key', testVal: 1234};
 
-    var mockQuery = new MonadTester('select', 'from', 'where').select(['testTable.testKey', 'testTable.testVal']).from('testTable')
+    var mockQuery = new MonadTester('select', 'from', 'where').select([{testTable_testKey: 'testTable.testKey'}, {testTable_testVal: 'testTable.testVal'}])
+                                                              .from('testTable')
                                                               .where('testTable.testKey=?', ['key'])
-                                                              .EXPECT('execute').andCall(0).with(null, [expected]);
+                                                              .EXPECT('execute').andCall(0).with(null, [{testTable_testKey: expected.testKey,
+                                                                                                         testTable_testVal: expected.testVal}]);
 
     var Mock = new MySqlModel(testCtor, newPool(mockQuery), {
         table: 'testTable',
@@ -166,4 +174,72 @@ module.exports.testSaveAssociations = function(test) {
         test.ok(assocInsertDone);
         test.done();
     }).fail(failTest.bind(null, test));
+};
+
+module.exports.testJoin = function(test) {
+    var Medicine = function() {
+        this.id = undefined;
+        this.name = undefined;
+        this.units = undefined;
+    };
+
+    var Prescription = function() {
+        this.id = undefined;
+        this.medicine = undefined;
+        this.time = undefined;
+        this.dose = undefined;
+    };
+
+    var advil = new Medicine();
+    advil.id = 4;
+    advil.name = 'Advil';
+    advil.units = 'mg';
+
+    var asprin = new Medicine();
+    asprin.id = 8;
+    asprin.name = 'Asprin';
+    asprin.units = 'mg';
+
+    var advilPrescription = new Prescription();
+    advilPrescription.id = 84;
+    advilPrescription.medicine = advil;
+    advilPrescription.time = new Date();
+    advilPrescription.dose = 874;
+
+    var mockQuery = new MonadTester('select', 'where', 'join', 'from');
+
+    mockQuery.select([{meds_id: 'meds.id'}, {meds_meds_info_id: 'meds.meds_info_id'}, {meds_dose: 'meds.dose'}, {meds_time: 'meds.time'}, 
+                      {meds_info_id: 'meds_info.id'}, {meds_info_name: 'meds_info.name'}, {meds_info_units: 'meds_info.units'}])
+             .from('meds')
+             .join({table: 'meds_info', type: 'inner', conditions: 'meds.meds_info_id=meds_info.id'}, [])
+             .where('meds.id=?', [advilPrescription.id])
+             .EXPECT('execute').andCall(0).with(null, [{meds_info_id: advilPrescription.medicine.id, meds_info_name: advilPrescription.medicine.name,
+                                                        meds_info_units: advilPrescription.medicine.units, meds_id: advilPrescription.id,
+                                                        meds_dose: advilPrescription.dose, meds_time: advilPrescription.time}]);
+
+    Medicine = new MySqlModel(Medicine, newPool(mockQuery),
+    {
+        table: 'meds_info',
+        fields: {
+            id: {field: 'id', id: true},
+            name: {field: 'name'},
+            units: {field: 'units'}
+        }
+    });
+
+    Prescription = new MySqlModel(Prescription, newPool(mockQuery),
+    {
+        table: 'meds',
+        fields: {
+            id: {field: 'id', id: true},
+            medicine: {field: 'meds_info_id', join: Medicine, joinType: 'inner'},
+            dose: {field: 'dose'},
+            time: {field: 'time'}
+        }
+    });
+
+    Prescription.match({id: advilPrescription.id}).success(function(results) {
+        test.deepEqual(advilPrescription, results[0]);
+        test.done();
+    }).fail(failTest.bind(test));
 };
