@@ -131,6 +131,8 @@ module.exports.testSaveAssociations = function(test) {
     assoc.testVal = 'test this';
     var ASSOC_ID = 375;
 
+    var ASSOC_JOIN_ID = 394;
+
     var main = new testMain();
     main.id = 34;
     main.val = 9848;
@@ -149,6 +151,9 @@ module.exports.testSaveAssociations = function(test) {
     mockQuery.insert('assoc', ['assoc.testVal'], ['test this']).EXPECT('execute').andCall(function() {
         assocInsertDone = true;
     }, 0).with(null, {warnings: null, id: ASSOC_ID});
+    mockQuery.insert('main_assoc', ['main_id', 'assoc_id'], [main.id, ASSOC_ID]).EXPECT('execute').andCall(function() {
+        linkingInsertDone = true;
+    }, 0).with(null, {warnings: null, id: ASSOC_JOIN_ID});
 
     var MockAssoc = new MySqlModel(testAssoc, newPool(mockQuery), {
         table: 'assoc',
@@ -171,7 +176,7 @@ module.exports.testSaveAssociations = function(test) {
     });
 
     main.saveAssociations().success(function(result) { 
-        test.ok(assocInsertDone);
+        test.ok(assocInsertDone && linkingInsertDone);
         test.done();
     }).fail(failTest.bind(null, test));
 };

@@ -1,6 +1,6 @@
 |  var urlArgs = [''].concat(
 |    $.map(arguments, function(arg) {
-|        return encodeURI(arg);
+|        return encodeURI(JSON.stringify(arg));
 |      }
 |    )
 |  );

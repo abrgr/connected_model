@@ -3,11 +3,11 @@
   , "version": "0.0.1"
   , "private": true
   , "dependencies": {
-      "express": "2.3.11"
+      "express": "2.5.0"
     , "jade": ">= 0.0.1"
-    , "db-mysql": "0.6.7"
-    , "generic-pool": "1.0.6"
-    , "underscore": "1.1.6"
+    , "db-mysql": "0.7.5"
+    , "generic-pool": "1.0.7"
+    , "underscore": "1.2.1"
   }
   , "main": "index"
 }
