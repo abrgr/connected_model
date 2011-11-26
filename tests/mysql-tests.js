@@ -115,7 +115,7 @@ module.exports.testSimpleInsert = function(test) {
     }).fail(failTest.bind(null, test));
 };
 
-module.exports.testSaveAssociations = function(test) {
+var testSaveAssociations = function(test) {
     var testAssoc = function() {
         this.testKey = undefined;
         this.testVal = undefined;
@@ -181,7 +181,7 @@ module.exports.testSaveAssociations = function(test) {
     }).fail(failTest.bind(null, test));
 };
 
-module.exports.testJoin = function(test) {
+module.exports.testJoinSelect = function(test) {
     var Medicine = function() {
         this.id = undefined;
         this.name = undefined;
@@ -218,7 +218,8 @@ module.exports.testJoin = function(test) {
              .from('meds')
              .join({table: 'meds_info', type: 'inner', conditions: 'meds.meds_info_id=meds_info.id'}, [])
              .where('meds.id=?', [advilPrescription.id])
-             .EXPECT('execute').andCall(0).with(null, [{meds_info_id: advilPrescription.medicine.id, meds_info_name: advilPrescription.medicine.name,
+             .EXPECT('execute').andCall(0).with(null, [{meds_id: advilPrescription.id, meds_info_id: advilPrescription.medicine.id, 
+                                                        meds_info_name: advilPrescription.medicine.name,
                                                         meds_info_units: advilPrescription.medicine.units, meds_id: advilPrescription.id,
                                                         meds_dose: advilPrescription.dose, meds_time: advilPrescription.time}]);
 
@@ -246,5 +247,61 @@ module.exports.testJoin = function(test) {
     Prescription.match({id: advilPrescription.id}).success(function(results) {
         test.deepEqual(advilPrescription, results[0]);
         test.done();
-    }).fail(failTest.bind(test));
+    }).fail(failTest.bind(null, test));
+};
+
+module.exports.testJoinInsert = function(test) {
+    var Medicine = function() {
+        this.id = undefined;
+        this.name = undefined;
+        this.units = undefined;
+    };
+
+    var Prescription = function() {
+        this.id = undefined;
+        this.medicine = undefined;
+        this.time = undefined;
+        this.dose = undefined;
+    };
+
+    var advil = new Medicine();
+    advil.id = 4;
+    advil.name = 'Advil';
+    advil.units = 'mg';
+
+    var advilPrescription = new Prescription();
+    advilPrescription.medicine = advil;
+    advilPrescription.time = new Date();
+    advilPrescription.dose = 874;
+
+    var mockQuery = new MonadTester('insert');
+
+    mockQuery.insert('meds', ['meds_info_id', 'time', 'dose'], [advilPrescription.medicine.id, advilPrescription.time, advilPrescription.dose])
+             .EXPECT('execute').andCall(0).with({id: 84}); 
+
+    Medicine = new MySqlModel(Medicine, newPool(mockQuery),
+    {
+        table: 'meds_info',
+        fields: {
+            id: {field: 'id', id: true},
+            name: {field: 'name'},
+            units: {field: 'units'}
+        }
+    });
+
+    Prescription = new MySqlModel(Prescription, newPool(mockQuery),
+    {
+        table: 'meds',
+        fields: {
+            id: {field: 'id', id: true},
+            medicine: {field: 'meds_info_id', join: Medicine, joinType: 'inner'},
+            dose: {field: 'dose'},
+            time: {field: 'time'}
+        }
+    });
+
+    Prescription.prototype.insert.call(advilPrescription).success(function(result) {
+        test.deepEqual(result.id, 84);
+        test.done();
+    }).fail(failTest.bind(null, test));
 };
