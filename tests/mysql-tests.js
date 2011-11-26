@@ -96,7 +96,7 @@ module.exports.testSimpleInsert = function(test) {
 
     var mockQuery = new MonadTester('select', 'from', 'where', 'insert', 'update', 'set');
     
-    mockQuery.insert('main', ['main.val'], [main.val]).EXPECT('execute').andCall(0).with(null, {warnings: undefined, id: main.id});
+    mockQuery.insert('main', ['val'], [main.val]).EXPECT('execute').andCall(0).with(null, {warnings: undefined, id: main.id});
 
     var MockMain = new MySqlModel(testMain, newPool(mockQuery), {
         table: 'main',
@@ -276,8 +276,8 @@ module.exports.testJoinInsert = function(test) {
 
     var mockQuery = new MonadTester('insert');
 
-    mockQuery.insert('meds', ['meds_info_id', 'time', 'dose'], [advilPrescription.medicine.id, advilPrescription.time, advilPrescription.dose])
-             .EXPECT('execute').andCall(0).with({id: 84}); 
+    mockQuery.insert('meds', ['meds_info_id', 'dose', 'time'], [advilPrescription.medicine.id, advilPrescription.dose, advilPrescription.time])
+             .EXPECT('execute').andCall(0).with(null, {id: 84}); 
 
     Medicine = new MySqlModel(Medicine, newPool(mockQuery),
     {
