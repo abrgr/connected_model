@@ -5,4 +5,4 @@
 |    )
 |  );
 |  urlArgs = urlArgs.join('/');
-|  return $.ajax({url: '#{url}' + urlArgs, data: JSON.stringify(this), processData: false, type: 'POST', contentType: 'application/json'});
+|  return $.ajax($.extend({}, this.ajaxParams, {url: '#{url}' + urlArgs, data: JSON.stringify(this), processData: false, type: 'POST', contentType: 'application/json'}));
