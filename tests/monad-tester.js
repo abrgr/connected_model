@@ -51,7 +51,8 @@ MonadTester.prototype.EXPECT = function(retMethod) {
             });
 
             if ( selected.length !== 1 ) {
-                console.error('Found', selected.length, 'currentArgs', self.currentArgs, 'retMethodsByArgs', _.pluck(self.retMethodsByArgs, 'args'));
+                console.error('Found', selected.length, 'currentArgs', JSON.stringify(self.currentArgs), 
+                              'retMethodsByArgs', JSON.stringify(_.pluck(self.retMethodsByArgs, 'args')));
 
                 throw new Error("Multiple or no returns possible");
             }
