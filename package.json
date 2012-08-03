@@ -8,6 +8,7 @@
     , "db-mysql": "0.7.5"
     , "generic-pool": "1.0.7"
     , "underscore": "1.2.1"
+    , "log4js": "0.4.1"
   }
   , "main": "index"
 }
