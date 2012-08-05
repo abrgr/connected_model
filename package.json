@@ -1,10 +1,10 @@
 {
     "name": "connected-model"
-  , "version": "0.0.1"
+  , "version": "0.3.2"
   , "private": true
   , "dependencies": {
       "express": "2.5.0"
-    , "jade": ">= 0.0.1"
+    , "jade": "0.27.0"
     , "db-mysql": "0.7.5"
     , "generic-pool": "1.0.7"
     , "underscore": "1.2.1"
