@@ -305,3 +305,112 @@ module.exports.testJoinInsert = function(test) {
         test.done();
     }).fail(failTest.bind(null, test));
 };
+
+module.exports.testManyToManyJoinSelect = function(test) {
+    var Medicine = function() {
+        this.id = undefined;
+        this.name = undefined;
+        this.units = undefined;
+    };
+
+    var Prescription = function() {
+        this.id = undefined;
+        this.medicine = undefined;
+        this.time = undefined;
+        this.dose = undefined;
+    };
+
+    var Regimen = function() {
+        this.id = undefined;
+        this.uid = undefined;
+        this.startDate = undefined;
+        this.endDate = undefined;
+        this.active = undefined;
+        this.prescriptions = undefined; 
+    }
+
+    var advil = new Medicine();
+    advil.id = 4;
+    advil.name = 'Advil';
+    advil.units = 'mg';
+
+    var asprin = new Medicine();
+    asprin.id = 8;
+    asprin.name = 'Asprin';
+    asprin.units = 'mg';
+
+    var advilPrescription = new Prescription();
+    advilPrescription.id = 84;
+    advilPrescription.medicine = advil;
+    advilPrescription.time = new Date();
+    advilPrescription.dose = 874;
+
+    var regimen = new Regimen();
+    regimen.id = 1;
+    regimen.uid = 4;
+    regimen.startDate = new Date(2012, 01, 01);
+    regimen.endDate = new Date(2099, 12, 31);
+    regimen.active = true;
+    regimen.prescriptions = [advilPrescription]; 
+
+    var mockQuery = new MonadTester('select', 'where', 'join', 'from', 'and');
+
+    mockQuery.select([{meds_regimen_id: 'meds_regimen.id'}, {meds_regimen_uid: 'meds_regimen.uid'}, {meds_regimen_is_active: 'meds_regimen.is_active'},
+                      {meds_regimen_effective_from: 'meds_regimen.effective_from'}, {meds_regimen_effective_to: 'meds_regimen.efective_to'},
+                      {meds_id: 'meds.id'}, {meds_meds_info_id: 'meds.meds_info_id'}, {meds_dose: 'meds.dose'}, {meds_time: 'meds.time'}, 
+                      {meds_info_id: 'meds_info.id'}, {meds_info_name: 'meds_info.name'}, {meds_info_units: 'meds_info.units'}])
+             .from('meds_regimen')
+             .join({table: 'meds_regimen_dose', type: 'outer', conditions: 'meds_regimen_dose.meds_regimen_id=meds_regimen.id'})
+             .join({table: 'meds', type: 'outer', conditions: 'meds_regimen_dose.meds_id=meds.id)'})
+             .join({table: 'meds_info', type: 'inner', conditions: 'meds.meds_info_id=meds_info.id'}, [])
+             .where('meds_regimen.id=?', [regimen.id])
+             .and('meds_regimen_uid=?', [regimen.uid])
+             .EXPECT('execute').andCall(0).with(null, [{meds_regimen_id: regimen.id, meds_regimen_uid: regimen.uid, meds_regimen_is_active: regimen.active,
+                                                        meds_regimen_effective_from: regimen.startDate, meds_regimen_effective_to: regimen.endDate,
+                                                        meds_id: advilPrescription.id, meds_info_id: advilPrescription.medicine.id, 
+                                                        meds_info_name: advilPrescription.medicine.name,
+                                                        meds_info_units: advilPrescription.medicine.units, meds_id: advilPrescription.id,
+                                                        meds_dose: advilPrescription.dose, meds_time: advilPrescription.time}]);
+
+    Medicine = new MySqlModel(Medicine, newPool(mockQuery),
+    {
+        table: 'meds_info',
+        fields: {
+            id: {field: 'id', id: true},
+            name: {field: 'name'},
+            units: {field: 'units'}
+        }
+    });
+
+    Prescription = new MySqlModel(Prescription, newPool(mockQuery),
+    {
+        table: 'meds',
+        fields: {
+            id: {field: 'id', id: true},
+            medicine: {field: 'meds_info_id', join: Medicine, joinType: 'inner'},
+            dose: {field: 'dose'},
+            time: {field: 'time'}
+        }
+    });
+
+    Regimen = new MySqlModel(Regimen, newPool(mockQuery),
+    {
+        table: 'meds_regimen',
+        fields: {
+            id: {field: 'id', id: true},
+            uid: {field: 'uid', requiredJoinField: true},
+            active: {field: 'is_active'},
+            startDate: {field: 'effective_from'},
+            endDate: {field: 'effective_to'},
+        },
+        manyToManies: {prescriptions: {joinTable: 'meds_regimen_dose',
+                                       thisFields: {'id': 'meds_regimen_id'},
+                                       thatModel: Prescription,
+                                       thatFields: {'id': 'meds_id'}}}
+    });
+
+    Regimen.match({id: regimen.id, uid: regimen.uid}).success(function(results) {
+        test.deepEqual(regimen, results[0]);
+        test.done();
+    }).fail(failTest.bind(null, test));
+};
