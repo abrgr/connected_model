@@ -7,15 +7,7 @@
 |  urlArgs = urlArgs.join('/');
 |  var promise = new $.Deferred();
 |  var modelize = function(obj) { 
-|    var modelObjConstructor = function(){}; 
-|    modelObjConstructor.prototype = #{main_obj_name}.prototype; 
-|    var modelObj = new modelObjConstructor();
-|    for ( var key in obj ) { 
-|       if ( obj.hasOwnProperty(key) ) {
-|           modelObj[key] = obj[key]; 
-|       }
-|    } 
-|    return modelObj; 
+|    return new #{main_obj_name}(obj);
 |  };
 |  $.ajax({url: '#{url}' + urlArgs, type: 'GET'})
 |  .done(function(data) { 
