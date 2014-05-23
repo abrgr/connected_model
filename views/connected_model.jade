@@ -1,4 +1,6 @@
-|define(['#{[jqueryInclude].concat(additionalIncludes).join("','")}'], function($) {
+- var incs = [jqueryInclude].concat(Object.keys(additionalIncludes))
+- var args = ['jquery'].concat(Object.keys(additionalIncludes).map(function(k) { return additionalIncludes[k]; }))
+|define(['#{incs.join("','")}'], function(#{args.join(',')}) {
 != main_obj
 | 
 - each instance_function in connected_instance_functions

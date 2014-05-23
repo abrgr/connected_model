@@ -14,7 +14,17 @@ TestModel.prototype = {
 
 module.exports.additionalIncludesTest = function(test) {
     var modelOptions = {routes: routes, jqueryInclude: 'jquery', exposeDynamicJsRoute: false};
-    var model = CM('/scripts/models/test-model', TestModel, 'TestModel', _.extend({additionalIncludes: ['extra-include']}, modelOptions))
+    var model = CM('/scripts/models/test-model', TestModel, 'TestModel', _.extend({additionalIncludes: {'extra-include': 'extra', 'extra-include2': 'extra2'}}, modelOptions))
+
+    model.renderSync('/tmp');
+
+    console.log(fs.readFileSync('/tmp/scripts/models/test-model/model.js').toString('ascii'));
+    test.done();
+};
+
+module.exports.noAdditionalIncludesTest = function(test) {
+    var modelOptions = {routes: routes, jqueryInclude: 'jquery', exposeDynamicJsRoute: false};
+    var model = CM('/scripts/models/test-model', TestModel, 'TestModel', modelOptions)
 
     model.renderSync('/tmp');
 
