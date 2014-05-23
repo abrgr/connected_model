@@ -1,4 +1,4 @@
-|define(['#{jqueryInclude}'], function($) {
+|define(['#{[jqueryInclude].concat(additionalIncludes).join("','")}'], function($) {
 != main_obj
 | 
 - each instance_function in connected_instance_functions
