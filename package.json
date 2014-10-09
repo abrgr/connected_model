@@ -3,6 +3,7 @@
   "version": "0.11.1",
   "private": true,
   "dependencies": {
+    "bluebird": "^2.3.2",
     "jade": "^0.27.0",
     "db-mysql": "https://github.com/abrgr/node-db-mysql/tarball/master",
     "deferred": "https://github.com/abrgr/deferred/archive/v0.1.1.tar.gz",
