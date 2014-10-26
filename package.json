@@ -7,7 +7,7 @@
     "jade": "^0.27.0",
     "db-mysql": "https://github.com/abrgr/node-db-mysql/tarball/master",
     "generic-pool": "^1.0.7",
-    "underscore": "1.2.1"
+    "underscore": "^1.6.0"
   },
   "main": "index"
 }
