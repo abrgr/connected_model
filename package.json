@@ -1,6 +1,6 @@
 {
   "name": "connected_model",
-  "version": "0.12.4",
+  "version": "0.13.0",
   "private": true,
   "dependencies": {
     "bluebird": "^2.3.2",
